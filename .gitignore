@@ -1,0 +1,10 @@
+__pycache__/
+
+# python venv
+.venv
+venv/
+venv.bak/
+
+# quick testing files
+test/
+**test-**

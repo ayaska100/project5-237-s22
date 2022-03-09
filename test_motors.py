@@ -1,22 +1,22 @@
-#!/usr/bin/env python3
-from ev3dev2.motor import MoveTank
-from ev3dev2.sensor.lego import GyroSensor
+from movement import tank237
 from time import sleep
-from movement import move_cm, turn_180
+from ev3dev2.sensor.lego import GyroSensor
+from ev3dev2 import SpeedPercent
 
-tank = MoveTank('outA', 'outD')
+# initialization
+tank = tank237('outA', 'outD')
 
-move_cm(tank, 50)
-move_cm(tank, -50)
-sleep(2)
-move_cm(tank,30)
-turn_180(tank)
-move_cm(tank,30)
-turn_180(tank)
+# Initialize the tank's gyro sensor; calibrate gyro sensor and reset position to 0
+tank.gyro = GyroSensor()
+tank.gyro.calibrate()
+tank.gyro.reset()
 
-# # grab the gyrosensor and assign it to the tank, calibrate to initialize angle
-# tank.gyro = GyroSensor()
-# tank.gyro.calibrate()
+# Pivot 30 degrees
+tank.turn_right(
+    speed=SpeedPercent(5),
+    degrees=30
+)
 
-# def turn_180_gyro():  # experimental: uses gyro sensor
-#     tank.turn_degrees(speed=30, target_angle=180)
+# movement.turn_180_manual(tank)
+
+# movement.move_cm(50)
