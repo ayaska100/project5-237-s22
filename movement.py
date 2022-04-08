@@ -1,37 +1,47 @@
 #!/usr/bin/env python3
 from ev3dev2.motor import MoveTank
+import time
 
 
 class tank237(MoveTank):
     # extend MoveTank class into custom class
-    # prefix new functions with c_ for custom
+    # prefix user accessible functions with c_ for custom
+    # internal (custom) functions use _ at the beginning for private
 
-    def c_move_cm_time(self, distance):
-        '''Depricated (use c_move_cm instead).
-        Move a certain distance (cm) forward (positive) or backwards (negative).'''
-        # this impacts the distance - calibrate the time around it
-        speed = 30
+    # current x, y coordinates
+    # IMPORTANT COORDINATES
+    # BASE A: (6, -6)
+    # TODO: FILL MORE
+    # coordinates are measured to be the point directly between the two front wheels
+    _position = (0, 0)
 
-        # the motors can't move for a negative time, but they
-        # can move for a positive time at a negative speed
-        if (distance < 0):  # if negative
-            speed *= -1
+    def c_set_initial_position(self, x, y):
+        self._position = (x, y)
 
-        # this coefficient was taken through emperical testing
-        # NOTE!!!!! this is also dependent on the motor speed!
-        # it must be changed if a new speed is chosen
-        seconds_per_cm = 0.063
+    # 0 1 2 3
+    # n e s w
+    # default orientation is north, unless otherwise given
+    _orientation = 0
 
-        # take the absolute value because we cannot have negative time
-        # extra bit because. robot undershot short distances but overshot large distances
-        time = seconds_per_cm * abs(distance) + 0.0075
+    def c_set_initial_orientation(self, o):
+        assert(0 <= o and o <= 3), "orientation must be in range 0123 (nesw)"
 
-        # on_for_seconds arguments:
-        # left speed (0-100), right speed (0-100), time (s)
-        self.on_for_seconds(speed, speed, time)
+        self._orientation = o
+
+    # update orientation
+    # adding 1 means a rotation of 90 deg to the right
+    # mod 4 means that turning north from west makes a 0 and not 5
+    def _orientation_update_right_turn(self):
+        orientation = (orientation + 1) % 4
+
+    # same logic as above
+    def _orientation_update_left_turn(self):
+        orientation = (orientation - 1) % 4
 
     # wheel diameter 5.6cm = about 17.6 cm circumference - tune to reality
-    def c_move_cm(self, distance):
+    # this is left in becuase its the original implementation. if we need to
+    # recalibrate it then just calibrate the inches function instead
+    def _move_cm(self, distance):
         # this function is speed indepenendent bc it track the rotation of the
         # wheel which is inherently tied to distance traveled.
         speed = 35
@@ -42,9 +52,14 @@ class tank237(MoveTank):
         rotations = distance / 17.565
         self.on_for_rotations(speed, speed, rotations)
 
-    def c_turn_degrees(self, degrees):
-        '''Manual (hand-tuned) function:
-        turns x degrees to the right (negative for left).'''
+    # for convenience
+    def c_move_in(self, distance):
+        self._move_cm(2.54*distance)
+
+    def _turn_degrees(self, degrees):
+        # private because every time we turn we HAVE to update the orientation
+        # we can't call this manually
+
         # problem: this function is inherently a bit inaccurate because
         # the servos resist movement but have a small wiggle room
         # TODO: use smaller wheels?
@@ -66,3 +81,19 @@ class tank237(MoveTank):
 
         # aligned to speed. if speed is positive then robot turns clockwise.
         self.on_for_seconds(speed, -speed, time)
+
+    def c_turn_right(self):
+        self._turn_degrees(90)
+        # self._orientation_update_right_turn()
+
+    def c_turn_left(self):
+        self._turn_degrees(-90)
+        # self._orientation_update_left_turn()
+
+    def c_turn_180(self):
+        self._turn_degrees(180)
+        # self._orientation_update_right_turn()
+        # self._orientation_update_right_turn()
+
+    def c_wait_secs(self, seconds):
+        time.sleep(seconds)
