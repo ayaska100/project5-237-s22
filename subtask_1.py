@@ -11,6 +11,7 @@ box = 7
 tank.c_move_in(36)
 tank.c_turn_right()
 
+# TODO: update this to dynamically change based on box
 tank.c_move_in(40)
 tank.c_wait_secs(5)
 tank.c_move_in(56)

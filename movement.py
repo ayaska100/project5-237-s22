@@ -32,11 +32,11 @@ class tank237(MoveTank):
     # adding 1 means a rotation of 90 deg to the right
     # mod 4 means that turning north from west makes a 0 and not 5
     def _orientation_update_right_turn(self):
-        orientation = (orientation + 1) % 4
+        _orientation = (_orientation + 1) % 4
 
     # same logic as above
     def _orientation_update_left_turn(self):
-        orientation = (orientation - 1) % 4
+        _orientation = (_orientation - 1) % 4
 
     # wheel diameter 5.6cm = about 17.6 cm circumference - tune to reality
     # this is left in becuase its the original implementation. if we need to
