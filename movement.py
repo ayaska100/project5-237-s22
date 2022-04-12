@@ -97,3 +97,64 @@ class tank237(MoveTank):
 
     def c_wait_secs(self, seconds):
         time.sleep(seconds)
+
+    # takes color sensor object as parameter
+    def c_scan_barcode(self, t_colorsensor):
+        # percentage of reflected light
+        BLACK_THRESHOLD = 0.3
+        # WHITE_THRESHOLD = 0.7
+
+        # used when we need to tell one or the other
+        # this can be adjusted for extra calibration if needed
+        MID_THRESHOLD = 0.5
+
+        def check_black():
+            return t_colorsensor.Reflected_Light_Intensity < BLACK_THRESHOLD
+
+        # assumes the color is one or the other. inaccurate for other colors but
+        # makes white/black detection much more robust
+        # also more importantly. returns a character that can be used to pattern match
+        def black_or_white():
+            if t_colorsensor.Reflected_Light_Intensity < MID_THRESHOLD:
+                return "b"
+            else:
+                return "w"
+
+        # run slowly until told do otherwise
+        self.on(speed=20)
+
+        # Color returns a color:
+        # 0: No color
+        # 1: Black
+        # 2: Blue
+        # 3: Green
+        # 4: Yellow
+        # 5: Red
+        # 6: White
+        # 7: Brown
+
+        # wait (keep moving forwards) until color is black
+        while not (check_black()):
+            time.sleep(20/1000)  # sleep 50 ms between checks
+
+        # pause
+        self.off()
+
+        pattern = ""
+        for _ in range(3):
+            # slightly overshoot absolute distance to next  (more robust movement) due to initial stopping position.
+            self.c_move_in(0.55)
+            pattern += black_or_white()  # returns "b" or "w"
+
+        if pattern == "www":
+            code = 1
+        elif pattern == "wbw":
+            code = 2
+        elif pattern == "bww":
+            code = 3
+        elif pattern == "wwb":
+            code = 4
+        else:
+            code = 5  # undetermined
+
+        return code
